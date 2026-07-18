@@ -79,3 +79,11 @@ def existe_codigo_cct01(conn, cod, conta):
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM cct01 WHERE cct01_02=? AND cct01_03=?", (cod,conta,))
     return cursor.fetchone()[0] > 0
+
+# ============================================================
+#   TABELA CCT02
+# ============================================================
+def listar_registros_cct02(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT cct02_00, cct02_02, cct02_03, cct02_11, cct02_01, cct02_08, cct02_04, cct02_05, cct02_07 FROM cct02 ORDER BY cct02_02, cct02_03, cct02_05")
+    return cursor.fetchall()
