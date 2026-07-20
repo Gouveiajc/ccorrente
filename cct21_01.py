@@ -50,7 +50,6 @@ def abrir_lista(root):
     frame_grid = ttk.Frame(janela, padding=10)
     frame_grid.pack(fill="both", expand=True)
 
-
     # Label para mensagens
     label_aviso = ttk.Label(frame_grid, text="", foreground="red", font=("Arial", 10, "bold"))
     label_aviso.pack(anchor="w", pady=(0, 5))

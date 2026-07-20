@@ -4,17 +4,16 @@ Tabela CCT02
 Módulo: cct21_01.py
 Jul/2026
 """
-
 import tkinter as tk
 from tkinter import ttk, messagebox
-import cct00_0
+import cct00_0   # conexão
 
 
 def abrir_janela_cct02(root, tree):
 
     janela = tk.Toplevel(root)
-    janela.title("Inclusão de Movimento")
-    janela.geometry("600x550")
+    janela.title("Inclusão de Movimento Conta Corrente")
+    janela.geometry("600x450")
     janela.grab_set()
     janela.bind("<Escape>", lambda e: janela.destroy())
 
@@ -23,191 +22,213 @@ def abrir_janela_cct02(root, tree):
 
     campos = {}
 
-    ttk.Label(frame, text="Inclusão de Movimento:").grid(row=0, column=0, sticky="w", pady=5)
+    # ============================
+    # BANCO (CCT01)
+    # ============================
+    ttk.Label(frame, text="Banco:").grid(row=0, column=0, sticky="w", pady=5)
 
-    try:
-        conn = cct00_0.conectar()
-        cursor = conn.cursor()
-        cursor.execute("SELECT INV02_06, INV02_02, INV02_17 FROM INV02 ORDER BY INV02_06")
-        tipos = cursor.fetchall()
-        lista_tipos = [t[0] for t in tipos]
-    except Exception as e:
-        messagebox.showerror("Erro", f"Erro ao Carregar Movimentos: {e}")
-        lista_tipos = []
-    finally:
-        conn.close()
+    conn = cct00_0.conectar()
+    bancos = cct00_0.listar_registros_cct01(conn)
+    conn.close()
 
-    combo_codigo = ttk.Combobox(frame, values=lista_tipos, state="readonly", width=20)
-    combo_codigo.grid(row=0, column=1, sticky="w", pady=5)
-    campos["INV03_06"] = combo_codigo
+    lista_bancos = [f"{b[0]} - {b[1]}" for b in bancos]
 
-    ttk.Label(frame, text="Descrição Ativo:").grid(row=1, column=0, sticky="w", pady=5)
+    combo_banco = ttk.Combobox(frame, values=lista_bancos, state="readonly", width=30)
+    combo_banco.grid(row=0, column=1, sticky="w", pady=5)
+    campos["CCT02_02"] = combo_banco
 
-    descricao_var = tk.StringVar()
-    entry_descricao = ttk.Entry(frame, textvariable=descricao_var, width=40, state="readonly")
-    entry_descricao.grid(row=1, column=1, sticky="w", pady=5)
-    campos["INV03_02"] = entry_descricao
+    # CAMPOS AUTOMÁTICOS DO BANCO
+    campos["CCT02_03"] = ttk.Entry(frame, width=30, state="readonly")  # descrição Banco
+    campos["CCT02_11"] = ttk.Entry(frame, width=30, state="readonly")  # Conta Corrente-Digito
 
-    def converter_virgula(event):
-        widget = event.widget
-        texto = widget.get()
-        novo = texto.replace(",", ".")
-        if texto != novo:
-            widget.delete(0, tk.END)
-            widget.insert(0, novo)
+    ttk.Label(frame, text="Descrição Banco:").grid(row=2, column=0, sticky="w", pady=5)
+    campos["CCT02_03"].grid(row=2, column=1, sticky="w", pady=5)
 
-    def atualizar_descricao(event=None):
-        codigo = combo_codigo.get()
+    ttk.Label(frame, text="Conta Corrente:").grid(row=1, column=0, sticky="w", pady=5)
+    campos["CCT02_11"].grid(row=1, column=1, sticky="w", pady=5)
 
-        if not codigo:
-            descricao_var.set("")
+    def atualizar_banco(event=None):
+        sel = combo_banco.get()
+        if not sel:
             return
 
+        codigo = sel.split(" - ")[0]
+        conn = cct00_0.conectar()
+        dado = cct00_0.listar_registros_reduzido_cct01(conn,codigo)
+        conn.close()
+
+        if dado:
+            conta, descricao = dado
+            campos["CCT02_03"].config(state="normal")
+            campos["CCT02_11"].config(state="normal")
+
+            campos["CCT02_03"].delete(0, tk.END)
+            campos["CCT02_11"].delete(0, tk.END)
+
+            campos["CCT02_03"].insert(0, conta)
+            campos["CCT02_11"].insert(0, descricao)
+
+            campos["CCT02_03"].config(state="readonly")
+            campos["CCT02_11"].config(state="readonly")
+
+    combo_banco.bind("<<ComboboxSelected>>", atualizar_banco)
+
+    # ============================
+    # NATUREZA (CCT00)
+    # ============================
+    ttk.Label(frame, text="Natureza:").grid(row=3, column=0, sticky="w", pady=5)
+
+    conn = cct00_0.conectar()
+    naturezas = cct00_0.listar_registros_reduzido_cct00(conn)
+    conn.close()
+
+    lista_nat = [f"{n[0]} - {n[1]}" for n in naturezas]
+
+    combo_nat = ttk.Combobox(frame, values=lista_nat, state="readonly", width=30)
+    combo_nat.grid(row=3, column=1, sticky="w", pady=5)
+    campos["CCT02_01"] = combo_nat
+
+    campos["CCT02_08"] = ttk.Entry(frame, width=30, state="readonly")
+
+    ttk.Label(frame, text="Descrição Natureza:").grid(row=4, column=0, sticky="w", pady=5)
+    campos["CCT02_08"].grid(row=4, column=1, sticky="w", pady=5)
+
+    def atualizar_nat(event=None):
+        sel = combo_nat.get()
+        if not sel:
+            return
+
+        codigo = sel.split(" - ")[0]
+
         conn = cct00_0.conectar()
         cursor = conn.cursor()
-        cursor.execute("SELECT INV02_02, INV02_17 FROM INV02 WHERE INV02_06 = ?", (codigo,))
+        cursor.execute("SELECT CCT00_08 FROM CCT00 WHERE CCT00_01=?", (codigo,))
         dado = cursor.fetchone()
         conn.close()
 
-        if not dado:
-            descricao_var.set("")
+        if dado:
+            descricao = dado[0]
+            campos["CCT02_08"].config(state="normal")
+            campos["CCT02_08"].delete(0, tk.END)
+            campos["CCT02_08"].insert(0, descricao)
+            campos["CCT02_08"].config(state="readonly")
+
+    combo_nat.bind("<<ComboboxSelected>>", atualizar_nat)
+
+    # ============================
+    # VALOR / DATA / OBS
+    # ============================
+    ttk.Label(frame, text="Valor:").grid(row=5, column=0, sticky="w", pady=5)
+    campos["CCT02_04"] = ttk.Entry(frame, width=30)
+    campos["CCT02_04"].grid(row=5, column=1, sticky="w", pady=5)
+
+    ttk.Label(frame, text="Data (DD/MM/AAAA):").grid(row=6, column=0, sticky="w", pady=5)
+    campos["CCT02_05"] = ttk.Entry(frame, width=30)
+    campos["CCT02_05"].grid(row=6, column=1, sticky="w", pady=5)
+
+    ttk.Label(frame, text="Observação:").grid(row=7, column=0, sticky="w", pady=5)
+    campos["CCT02_07"] = ttk.Entry(frame, width=40)
+    campos["CCT02_07"].grid(row=7, column=1, sticky="w", pady=5)
+
+    # ============================
+    # SALVAR
+    # ============================
+    def gravar():
+
+        registro = {}
+
+        # BANCO
+        banco_sel = campos["CCT02_02"].get()
+        if banco_sel:
+            registro["CCT02_02"] = banco_sel.split(" - ")[0]
+        else:
+            messagebox.showwarning("Atenção", "Selecione o banco.")
             return
 
-        descricao, usa_dolar_flag = dado
-        descricao_var.set(descricao)
+        registro["CCT02_03"] = campos["CCT02_03"].get()
+        registro["CCT02_11"] = campos["CCT02_11"].get()
 
-        usa_dolar = (usa_dolar_flag == "S")
-        janela.usa_dolar = "S" if usa_dolar else "N"
-
-        if usa_dolar:
-            campos["INV03_15"].config(state="normal")
-            campos["INV03_22"].config(state="normal")
-
-            campos["INV03_15"].bind("<KeyRelease>", converter_virgula)
-            campos["INV03_22"].bind("<KeyRelease>", converter_virgula)
-
-            campos["INV03_15"].bind("<KeyRelease>", calcular_total_us)
-            campos["INV03_22"].bind("<KeyRelease>", calcular_total_us)
-            campos["INV03_07"].bind("<KeyRelease>", calcular_total_us)
-
-            campos["INV03_16"].config(state="readonly")
-            campos["INV03_16"].delete(0, tk.END)
-
+        # NATUREZA
+        nat_sel = campos["CCT02_01"].get()
+        if nat_sel:
+            registro["CCT02_01"] = nat_sel.split(" - ")[0]
         else:
-            for campo in ["INV03_15", "INV03_22"]:
-                campos[campo].config(state="disabled")
-                campos[campo].delete(0, tk.END)
+            messagebox.showwarning("Atenção", "Selecione a natureza.")
+            return
 
-            campos["INV03_16"].config(state="readonly")
-            campos["INV03_16"].delete(0, tk.END)
+        registro["CCT02_08"] = campos["CCT02_08"].get()
 
-    combo_codigo.bind("<<ComboboxSelected>>", atualizar_descricao)
+        # VALOR
+        valor = campos["CCT02_04"].get().replace(".", "").replace(",", ".")
+        try:
+            float(valor)
+        except:
+            messagebox.showwarning("Atenção", "Valor inválido.")
+            return
+        registro["CCT02_04"] = valor
 
-    labels = {
-        "INV03_12": "Tp Mov. (B/C/D/V):",
-        "INV03_07": "Quantidade:",
-        "INV03_13": "Valor Unitário:",
-        "INV03_14": "Valor Total R$:",
-        "INV03_15": "Cotação US$:",
-        "INV03_22": "Valor Unitário US$:",
-        "INV03_16": "Valor Total US$:",
-        "INV03_18": "Data Inclusão:",
-        "INV03_19": "Nota Corretagem:"
-    }
+        # DATA
+        data = campos["CCT02_05"].get()
+        try:
+            dia, mes, ano = data.split("/")
+            registro["CCT02_05"] = f"{ano}{mes}{dia}"
+        except:
+            messagebox.showwarning("Atenção", "Data inválida.")
+            return
 
-    row = 2
-    for campo, texto in labels.items():
-        ttk.Label(frame, text=texto).grid(row=row, column=0, sticky="w", pady=5)
+        registro["CCT02_07"] = campos["CCT02_07"].get()
 
-        if campo == "INV03_12":
-            entrada = ttk.Combobox(frame, values=["B", "C", "D", "V"], width=10, state="readonly")
-        elif campo in ["INV03_14", "INV03_16"]:
-            entrada = ttk.Entry(frame, width=30, state="readonly")
-        else:
-            entrada = ttk.Entry(frame, width=30)
+        # GRAVAR NO BANCO
+        conn = cct00_0.conectar()
+        cct00_0.inserir_registro_cct02(conn, registro)
+        conn.close()
 
-        entrada.grid(row=row, column=1, sticky="w", pady=5)
-        campos[campo] = entrada
-        row += 1
+        messagebox.showinfo("Sucesso", "Registro incluído com sucesso!")
+        limpar_campos()
 
-    campos["INV03_07"].bind("<KeyRelease>", converter_virgula)
-    campos["INV03_13"].bind("<KeyRelease>", converter_virgula)
-    campos["INV03_07"].bind("<KeyRelease>", calcular_total_rs)
-    campos["INV03_13"].bind("<KeyRelease>", calcular_total_rs)
+        def limpar_campos():
+            # limpa combo banco
+            campos["CCT02_02"].set("")
 
-    campos["INV03_15"].config(state="disabled")
-    campos["INV03_22"].config(state="disabled")
-    campos["INV03_16"].config(state="readonly")
+            # limpa conta corrente e descrição banco
+            campos["CCT02_03"].config(state="normal")
+            campos["CCT02_03"].delete(0, tk.END)
+            campos["CCT02_03"].config(state="readonly")
 
-    frame_botoes = ttk.Frame(janela, padding=10)
-    frame_botoes.pack()
+            campos["CCT02_11"].config(state="normal")
+            campos["CCT02_11"].delete(0, tk.END)
+            campos["CCT02_11"].config(state="readonly")
 
-    ttk.Button(frame_botoes, text="Salvar", width=15,
-               command=lambda: gravar_registro(janela, campos, tree)).grid(row=0, column=0, padx=10)
+            # limpa combo natureza
+            campos["CCT02_01"].set("")
 
-    ttk.Button(frame_botoes, text="Retornar", width=15,
-               command=janela.destroy).grid(row=0, column=1, padx=10)
+            # limpa descrição natureza
+            campos["CCT02_08"].config(state="normal")
+            campos["CCT02_08"].delete(0, tk.END)
+            campos["CCT02_08"].config(state="readonly")
+
+            # limpa valor, data e observação
+            campos["CCT02_04"].delete(0, tk.END)
+            campos["CCT02_05"].delete(0, tk.END)
+            campos["CCT02_07"].delete(0, tk.END)
+
+    def atualizar_grid_cct02(tree):
+        for i in tree.get_children():
+            tree.delete(i)
+
+        conn = cct00_0.conectar()
+        registros = cct00_0.listar_registros_cct02(conn)
+        conn.close()
+
+        for reg in registros:
+            tree.insert("", tk.END, values=reg)
+
+    def retornar():
+        janela.destroy()
+        atualizar_grid_cct02(tree)
+
+    ttk.Button(frame, text="Retornar", width=15, command=retornar).grid(row=8, column=1, pady=20)
+    ttk.Button(frame, text="Salvar", width=15, command=gravar).grid(row=8, column=0, pady=20)
+ 
 
 
-def gravar_registro(janela, campos, tree):
-
-    registro = {}
-
-    campos_numericos = [
-        "INV03_07",
-        "INV03_13",
-        "INV03_14",
-        "INV03_15",
-        "INV03_22",
-        "INV03_16"
-    ]
-
-    # COPIA DOS CAMPOS
-    for campo in campos:
-        widget = campos[campo]
-        valor = widget.get().strip()
-
-        if campo in campos_numericos:
-            valor = valor.replace(",", ".")
-
-        registro[campo] = valor
-
-    registro["usa_dolar"] = getattr(janela, "usa_dolar", "N")
-
-    erro = inv00_1.validar_campos_inv03(registro)
-    if erro:
-        messagebox.showwarning("Atenção", erro, parent=janela)
-        return
-
-    conn = inv00_0.conectar()
-    inv00_0.inserir_registro_inv03(conn, registro)
-    conn.close()
-
-    quantidade = float(registro["INV03_07"])
-    total_rs = float(registro["INV03_14"])
-    total_us = float(registro["INV03_16"]) if registro["usa_dolar"] == "S" else 0.0
-
-    conn = inv00_0.conectar()
-    inv00_0.atualizar_posicao_inv02(
-        conn,
-        codigo_ativo=registro["INV03_06"],
-        tipo_mov=registro["INV03_12"],
-        quantidade=quantidade,
-        total_rs=total_rs,
-        total_us=total_us,
-        usa_dolar=registro["usa_dolar"]
-    )
-    conn.close()
-
-    for i in tree.get_children():
-        tree.delete(i)
-
-    conn = inv00_0.conectar()
-    registros = inv00_0.listar_registros_inv03(conn)
-    conn.close()
-
-    for reg in registros:
-        tree.insert("", tk.END, values=reg)
-
-    messagebox.showinfo("Sucesso", "Registro incluído com sucesso!", parent=janela)
-    janela.destroy()
