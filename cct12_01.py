@@ -60,19 +60,21 @@ def abrir_lista(root):
     label_aviso = ttk.Label(frame_grid, text="", foreground="red", font=("Arial", 10, "bold"))
     label_aviso.pack(anchor="w", pady=(0, 5))
 
-    colunas = ("CCT01_02", "CCT01_03", "CCT01_11", "CCT01_10", "CCT01_05")
+    colunas = ("CCT01_02", "CCT01_12", "CCT01_03", "CCT01_11", "CCT01_10", "CCT01_05")
 
-    tree = ttk.Treeview(frame_grid, columns=colunas, show="headings", height=15)
+    tree = ttk.Treeview(frame_grid, columns=colunas, show="headings", height=20)
 
-    tree.heading("CCT01_02", text="Código Banco")
-    tree.heading("CCT01_03", text="Conta Corrente-Digito")
-    tree.heading("CCT01_11", text="Descrição Banco")
+    tree.heading("CCT01_02", text="Banco")
+    tree.heading("CCT01_12", text="Agencia")
+    tree.heading("CCT01_03", text="Descrição Banco")
+    tree.heading("CCT01_11", text="Conta Corrente")
     tree.heading("CCT01_10", text="Saldo")
     tree.heading("CCT01_05", text="Data")
   
     tree.column("CCT01_02", width=80)
-    tree.column("CCT01_03", width=80)
-    tree.column("CCT01_11", width=250)
+    tree.column("CCT01_12", width=80)
+    tree.column("CCT01_03", width=200)
+    tree.column("CCT01_11", width=90)
     tree.column("CCT01_10", width=100)
     tree.column("CCT01_05", width=80)
     

@@ -37,9 +37,13 @@ def abrir_janela_inv01(root, tree):
     entry_codigo = ttk.Entry(frame, width=10)
     entry_codigo.grid(row=0, column=1, sticky="w", pady=5)
 
-    ttk.Label(frame, text="Conta Corrente:").grid(row=1, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Agencia:").grid(row=1, column=0, sticky="w", pady=5)
+    entry_agencia = ttk.Entry(frame, width=30)
+    entry_agencia.grid(row=1, column=1, sticky="w", pady=5)
+
+    ttk.Label(frame, text="Conta Corrente:").grid(row=2, column=0, sticky="w", pady=5)
     entry_conta = ttk.Entry(frame, width=30)
-    entry_conta.grid(row=1, column=1, sticky="w", pady=5)
+    entry_conta.grid(row=2, column=1, sticky="w", pady=5)
 
     ttk.Label(frame, text="Descrição Banco:").grid(row=3, column=0, sticky="w", pady=5)
     entry_desc = ttk.Entry(frame, width=250)
@@ -67,6 +71,7 @@ def abrir_janela_inv01(root, tree):
     def salvar():
         cod = entry_codigo.get().strip()
         conta = entry_conta.get().strip()
+        agencia = entry_agencia.get().strip()
         desc = entry_desc.get().strip()
         saldo = entry_saldo.get().strip()
         data = entry_data.get().strip()
@@ -77,12 +82,12 @@ def abrir_janela_inv01(root, tree):
             conn = cct00_0.conectar()
             
             # 1. Verifica duplicidade de código
-            if cct00_0.existe_codigo_cct01(conn, cod, conta):
-                messagebox.showwarning("Atenção", f"O código {cod} conta {conta} já existe.", parent=janela)
+            if cct00_0.existe_codigo_cct01(conn, cod, agencia, conta):
+                messagebox.showwarning("Atenção", f"O Banco {cod} Agencia {agencia} Conta {conta} já existe.", parent=janela)
                 return
 
             # 3. Grava registro
-            cct00_0.inserir_registro_cct01(conn, cod, conta, desc, saldo_float, data)
+            cct00_0.inserir_registro_cct01(conn, cod, agencia, conta, desc, saldo_float, data)
             
             # 4. Atualiza o Treeview (Inserindo apenas o novo para performance)
             # Se preferir recarregar tudo, mantenha seu loop de delete/insert aqui
@@ -93,6 +98,7 @@ def abrir_janela_inv01(root, tree):
             # Limpa campos e foca no código
             entry_codigo.delete(0, tk.END)
             entry_conta.delete(0,tk.END)
+            entry_agencia.delete(0,tk.END)
             entry_desc.delete(0, tk.END)
             entry_saldo.delete(0, tk.END)
             entry_data.delete(0, tk.END)

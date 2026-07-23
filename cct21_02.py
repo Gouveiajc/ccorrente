@@ -31,7 +31,7 @@ def abrir_janela_cct02(root, tree):
     bancos = cct00_0.listar_registros_cct01(conn)
     conn.close()
 
-    lista_bancos = [f"{b[0]} - {b[1]}" for b in bancos]
+    lista_bancos = [f"{b[0]} - {b[1]} - {b[2]}" for b in bancos]
 
     combo_banco = ttk.Combobox(frame, values=lista_bancos, state="readonly", width=30)
     combo_banco.grid(row=0, column=1, sticky="w", pady=5)
@@ -39,13 +39,17 @@ def abrir_janela_cct02(root, tree):
 
     # CAMPOS AUTOMÁTICOS DO BANCO
     campos["CCT02_03"] = ttk.Entry(frame, width=30, state="readonly")  # descrição Banco
+    campos["CCT02_12"] = ttk.Entry(frame, width=30, state="readonly")  # agencia
     campos["CCT02_11"] = ttk.Entry(frame, width=30, state="readonly")  # Conta Corrente-Digito
 
-    ttk.Label(frame, text="Descrição Banco:").grid(row=2, column=0, sticky="w", pady=5)
-    campos["CCT02_03"].grid(row=2, column=1, sticky="w", pady=5)
+    ttk.Label(frame, text="Descrição Banco:").grid(row=1, column=0, sticky="w", pady=5)
+    campos["CCT02_03"].grid(row=1, column=1, sticky="w", pady=5)
 
-    ttk.Label(frame, text="Conta Corrente:").grid(row=1, column=0, sticky="w", pady=5)
-    campos["CCT02_11"].grid(row=1, column=1, sticky="w", pady=5)
+    ttk.Label(frame, text="Agencia:").grid(row=2, column=0, sticky="w", pady=5)
+    campos["CCT02_12"].grid(row=2, column=1, sticky="w", pady=5)
+
+    ttk.Label(frame, text="Conta Corrente:").grid(row=3, column=0, sticky="w", pady=5)
+    campos["CCT02_11"].grid(row=3, column=1, sticky="w", pady=5)
 
     def atualizar_banco(event=None):
         sel = combo_banco.get()
@@ -58,17 +62,21 @@ def abrir_janela_cct02(root, tree):
         conn.close()
 
         if dado:
-            conta, descricao = dado
+            descricao, agencia, conta = dado
             campos["CCT02_03"].config(state="normal")
+            campos["CCT02_12"].config(state="normal")
             campos["CCT02_11"].config(state="normal")
 
             campos["CCT02_03"].delete(0, tk.END)
+            campos["CCT02_12"].delete(0, tk.END)
             campos["CCT02_11"].delete(0, tk.END)
 
             campos["CCT02_03"].insert(0, conta)
+            campos["CCT02_12"].insert(0, agencia)
             campos["CCT02_11"].insert(0, descricao)
 
             campos["CCT02_03"].config(state="readonly")
+            campos["CCT02_12"].config(state="readonly")
             campos["CCT02_11"].config(state="readonly")
 
     combo_banco.bind("<<ComboboxSelected>>", atualizar_banco)
@@ -76,7 +84,7 @@ def abrir_janela_cct02(root, tree):
     # ============================
     # NATUREZA (CCT00)
     # ============================
-    ttk.Label(frame, text="Natureza:").grid(row=3, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Natureza:").grid(row=4, column=0, sticky="w", pady=5)
 
     conn = cct00_0.conectar()
     naturezas = cct00_0.listar_registros_reduzido_cct00(conn)
@@ -90,7 +98,7 @@ def abrir_janela_cct02(root, tree):
 
     campos["CCT02_08"] = ttk.Entry(frame, width=30, state="readonly")
 
-    ttk.Label(frame, text="Descrição Natureza:").grid(row=4, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Descrição Natureza:").grid(row=5, column=0, sticky="w", pady=5)
     campos["CCT02_08"].grid(row=4, column=1, sticky="w", pady=5)
 
     def atualizar_nat(event=None):
@@ -118,15 +126,15 @@ def abrir_janela_cct02(root, tree):
     # ============================
     # VALOR / DATA / OBS
     # ============================
-    ttk.Label(frame, text="Valor:").grid(row=5, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Valor:").grid(row=6, column=0, sticky="w", pady=5)
     campos["CCT02_04"] = ttk.Entry(frame, width=30)
     campos["CCT02_04"].grid(row=5, column=1, sticky="w", pady=5)
 
-    ttk.Label(frame, text="Data (DD/MM/AAAA):").grid(row=6, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Data (DD/MM/AAAA):").grid(row=7, column=0, sticky="w", pady=5)
     campos["CCT02_05"] = ttk.Entry(frame, width=30)
     campos["CCT02_05"].grid(row=6, column=1, sticky="w", pady=5)
 
-    ttk.Label(frame, text="Observação:").grid(row=7, column=0, sticky="w", pady=5)
+    ttk.Label(frame, text="Observação:").grid(row=8, column=0, sticky="w", pady=5)
     campos["CCT02_07"] = ttk.Entry(frame, width=40)
     campos["CCT02_07"].grid(row=7, column=1, sticky="w", pady=5)
 

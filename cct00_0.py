@@ -64,19 +64,19 @@ def alterar_registro_cct00(conn, cod, desc, tipo, obs):
 # ============================================================
 def listar_registros_cct01(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT cct01_02, cct01_03, cct01_11, cct01_10, cct01_05 FROM CCT01 ORDER BY cct01_02, cct01_03")
+    cursor.execute("SELECT cct01_02, cct01_12, cct01_03, cct01_11, cct01_10, cct01_05 FROM CCT01 ORDER BY cct01_02, cct01_03")
     return cursor.fetchall()
 
 def listar_registros_reduzido_cct01(conn,codigo):
     cursor = conn.cursor()
-    cursor.execute("SELECT cct01_03, cct01_11 FROM CCT01 WHERE CCT01_02=?",(codigo,))
+    cursor.execute("SELECT cct01_03, cct01_12, cct01_11 FROM CCT01 WHERE CCT01_02=?",(codigo,))
     return cursor.fetchall()
 
-def inserir_registro_cct01(conn, cod, conta, desc, saldo, data):
+def inserir_registro_cct01(conn, cod, agencia, conta, desc, saldo, data):
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO cct01 (cct01_02, cct01_03, cct01_11, cct01_10, cct01_05) VALUES (?,?,?,?,?)",
-        (cod, conta, desc, saldo, data)
+        "INSERT INTO cct01 (cct01_02, cct01_12, cct01_03, cct01_11, cct01_10, cct01_05) VALUES (?,?,?,?,?,?)",
+        (cod, agencia, desc, conta, saldo, data)
     )
     conn.commit()
 
@@ -85,9 +85,9 @@ def excluir_registro_cct01(conn, cod, conta):
     cursor.execute("DELETE FROM cct01 WHERE cct01_02=? AND cct01_03=?", (cod,conta,))
     conn.commit()
 
-def existe_codigo_cct01(conn, cod, conta):
+def existe_codigo_cct01(conn, cod, agencia, conta):
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM cct01 WHERE cct01_02=? AND cct01_03=?", (cod,conta,))
+    cursor.execute("SELECT COUNT(*) FROM cct01 WHERE cct01_02=? AND cct01_12=? AND cct01_11=?", (cod,agencia,conta,))
     return cursor.fetchone()[0] > 0
 
 # ============================================================
@@ -95,7 +95,7 @@ def existe_codigo_cct01(conn, cod, conta):
 # ============================================================
 def listar_registros_cct02(conn):
     cursor = conn.cursor()
-    cursor.execute("SELECT cct02_00, cct02_02, cct02_03, cct02_11, cct02_01, cct02_08, cct02_04, cct02_05, cct02_07 FROM cct02 ORDER BY cct02_02, cct02_03, cct02_05")
+    cursor.execute("SELECT cct02_00, cct02_02, cct02_12, cct02_03, cct02_11, cct02_01, cct02_08, cct02_04, cct02_05, cct02_07 FROM cct02 ORDER BY cct02_02, cct02_03, cct02_05")
     return cursor.fetchall()
 
 def inserir_registro_cct02(conn, registro):
@@ -107,6 +107,7 @@ def inserir_registro_cct02(conn, registro):
     sql = """
         INSERT INTO CCT02 (
             CCT02_02, -- CODIGO BANCO
+            CCT02_12, -- AGENCIA
             CCT02_03, -- CONTA CORRENTE - DIGITO
             CCT02_11, -- DESCRIÇÃO BANCO
             CCT02_01, -- NATUREZA
@@ -115,11 +116,12 @@ def inserir_registro_cct02(conn, registro):
             CCT02_05, -- DATA
             CCT02_07  -- OBSERVAÇÃO
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?
         )
     """
     valores = (
         registro["CCT02_02"],
+        registro["CCT02_12"],
         registro["CCT02_03"],
         registro["CCT02_11"],
         registro["CCT02_01"],
